@@ -1,15 +1,28 @@
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.jetbrains.kotlin.gradle.plugin.KaptExtension
+import processor.EventAnnotationProcessor
+import processor.EventMessageDocumentation
 
 class MEDPlugin : Plugin<Project> {
 
     override fun apply(target: Project) {
+        addKapt(project = target)
+        target.subprojects{
+            addKapt(it)
+        }
 
+        target.tasks.register("buildDocs", BuildDocsTask::class.java){
+            it.dependsOn("compilerKotlin")
+            it.description = "Builds the documentation"
+            it.group = "local"
+        }
     }
 
 }
 
-private fun addKpt(project: Project){
+@EventMessageDocumentation(name="addKpt", description = "Something", topic = "")
+private fun addKapt(project: Project){
     project.pluginManager.apply("org.jetbrains.kotlin.jvm")
     project.pluginManager.apply("org.jetbrains.kotlin.kapt")
     project.configurations.getByName("kapt").dependencies.add(
@@ -26,6 +39,9 @@ private fun addKpt(project: Project){
 
     project.extensions.configure<KaptExtension>("kapt") {
         it.useBuildCache = true
+        it.arguments{
+            arg(EventAnnotationProcessor.EVENT_OUTPUT_DIR, project.buildDir.absolutePath + "/docs/events")
+        }
     }
 
 }

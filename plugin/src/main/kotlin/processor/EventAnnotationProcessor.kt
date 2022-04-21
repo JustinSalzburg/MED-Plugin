@@ -1,9 +1,11 @@
 package processor
 
+import java.io.File
 import javax.annotation.processing.*
 import javax.lang.model.SourceVersion
 import javax.lang.model.element.Element
 import javax.lang.model.element.TypeElement
+import javax.tools.Diagnostic
 
 @Retention(AnnotationRetention.SOURCE)
 @Target(AnnotationTarget.FUNCTION)
@@ -21,7 +23,24 @@ data class EventDocumentationEntry(
 @SupportedOptions
 class EventAnnotationProcessor : AbstractProcessor() {
 
+    companion object {
+        const val EVENT_OUTPUT_DIR = "eventannotationprocessor.outputdir"
+    }
+
+    private var outputDir: File? = null
     val eventDocumentations = mutableListOf<EventDocumentationEntry>()
+
+    override fun getSupportedOptions() = setOf(EVENT_OUTPUT_DIR)
+
+    private fun outputDir(): String{
+        processingEnv.options[EVENT_OUTPUT_DIR]?.let{
+            return it
+        }
+        processingEnv.messager.printMessage(
+            Diagnostic.Kind.ERROR, "Event output directory: $EVENT_OUTPUT_DIR not set"
+        )
+        error("Event output directory: $EVENT_OUTPUT_DIR not set")
+    }
 
     override fun process(annotations: MutableSet<out TypeElement>?, roundEnv: RoundEnvironment?): Boolean {
 

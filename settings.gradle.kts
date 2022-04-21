@@ -1,4 +1,4 @@
-rootProject.name = "MEDPlugin"
+rootProject.name = "medGradlePlugin"
 
 includeBuild("plugin")
 includeBuild("exampleProject")
