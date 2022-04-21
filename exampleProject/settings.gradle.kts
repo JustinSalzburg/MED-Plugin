@@ -1,3 +1,3 @@
-pluginManagement{
-    includeBuild("../plugin")
-}
+rootProject.name = "exampleProject"
+
+includeBuild("../plugin")

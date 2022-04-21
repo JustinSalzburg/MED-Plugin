@@ -1,8 +1,9 @@
+package io.github.justinsalzburg.medgradleplugin
+
+import io.github.justinsalzburg.medgradleplugin.processor.EventAnnotationProcessor
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.jetbrains.kotlin.gradle.plugin.KaptExtension
-import processor.EventAnnotationProcessor
-import processor.EventMessageDocumentation
 
 class MEDPlugin : Plugin<Project> {
 
@@ -21,13 +22,12 @@ class MEDPlugin : Plugin<Project> {
 
 }
 
-@EventMessageDocumentation(name="addKpt", description = "Something", topic = "")
 private fun addKapt(project: Project){
     project.pluginManager.apply("org.jetbrains.kotlin.jvm")
     project.pluginManager.apply("org.jetbrains.kotlin.kapt")
-    project.configurations.getByName("kapt").dependencies.add(
-        project.dependencies.create("io.github.justinsalzburg:med-plugin:1.0.0")
-    )
+//    project.configurations.getByName("kapt").dependencies.add(
+//        project.dependencies.create("io.github.justinsalzburg:med-gradle-plugin")
+//    )
 
     project.pluginManager.withPlugin("org.jetbrains.kotlin.kapt"){
         project.afterEvaluate{

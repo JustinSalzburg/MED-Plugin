@@ -1,8 +1,10 @@
+package io.github.justinsalzburg.medgradleplugin
+
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.Input
 import java.io.File
 
-class BuildDocsTask: DefaultTask() {
+open class BuildDocsTask: DefaultTask() {
     @Input
     var systemDescriptionPath: String = "description.md"
 

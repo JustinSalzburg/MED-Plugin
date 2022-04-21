@@ -1,4 +1,4 @@
-package processor
+package io.github.justinsalzburg.medgradleplugin.processor
 
 import java.io.File
 import javax.annotation.processing.*
