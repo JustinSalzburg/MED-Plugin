@@ -12,3 +12,14 @@ dependencies {
 
     implementation("io.github.justinsalzburg.med-gradle-plugin:plugin:1.1.8")
 }
+
+tasks.named("build") {
+    dependsOn(gradle.includedBuild("plugin").task(":build"))
+}
+
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    kotlinOptions {
+        freeCompilerArgs = listOf("-Xjsr305=strict")
+        jvmTarget = "11"
+    }
+}

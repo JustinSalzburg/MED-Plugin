@@ -12,12 +12,6 @@ class MEDPlugin : Plugin<Project> {
         target.subprojects{
             addKapt(it)
         }
-
-        target.tasks.register("buildDocs", BuildDocsTask::class.java){
-            it.dependsOn("compilerKotlin")
-            it.description = "Builds the documentation"
-            it.group = "local"
-        }
     }
 
 }
@@ -25,9 +19,9 @@ class MEDPlugin : Plugin<Project> {
 private fun addKapt(project: Project){
     project.pluginManager.apply("org.jetbrains.kotlin.jvm")
     project.pluginManager.apply("org.jetbrains.kotlin.kapt")
-//    project.configurations.getByName("kapt").dependencies.add(
-//        project.dependencies.create("io.github.justinsalzburg:med-gradle-plugin")
-//    )
+    project.configurations.getByName("kapt").dependencies.add(
+       project.dependencies.create("io.github.justinsalzburg.med-gradle-plugin:plugin:0.0.1")
+   )
 
     project.pluginManager.withPlugin("org.jetbrains.kotlin.kapt"){
         project.afterEvaluate{

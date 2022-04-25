@@ -18,9 +18,9 @@ data class EventDocumentationEntry(
     val topic: String
 )
 
-@SupportedSourceVersion(SourceVersion.RELEASE_11)
+@SupportedSourceVersion(SourceVersion.RELEASE_16)
 @SupportedAnnotationTypes
-@SupportedOptions
+@SupportedOptions(EventAnnotationProcessor.EVENT_OUTPUT_DIR)
 class EventAnnotationProcessor : AbstractProcessor() {
 
     companion object {
@@ -32,20 +32,24 @@ class EventAnnotationProcessor : AbstractProcessor() {
 
     override fun getSupportedOptions() = setOf(EVENT_OUTPUT_DIR)
 
-    private fun outputDir(): String{
-        processingEnv.options[EVENT_OUTPUT_DIR]?.let{
+
+    private fun outputDir(): String {
+        processingEnv.options[EVENT_OUTPUT_DIR]?.let {
             return it
         }
         processingEnv.messager.printMessage(
-            Diagnostic.Kind.ERROR, "Event output directory: $EVENT_OUTPUT_DIR not set"
+            Diagnostic.Kind.ERROR, "Event output directory $EVENT_OUTPUT_DIR not set"
         )
-        error("Event output directory: $EVENT_OUTPUT_DIR not set")
+        error("Event output directory $EVENT_OUTPUT_DIR not set")
     }
 
-    override fun process(annotations: MutableSet<out TypeElement>?, roundEnv: RoundEnvironment?): Boolean {
+    private val supportedTypes = setOf(EventMessageDocumentation::class.java.canonicalName)
 
-        val documented = roundEnv!!.getElementsAnnotatedWith(EventMessageDocumentation::class.java) ?: emptySet()
+    override fun getSupportedAnnotationTypes(): Set<String> = supportedTypes
 
+    override fun process(annotations: MutableSet<out TypeElement>, roundEnv: RoundEnvironment): Boolean {
+
+        val documented = roundEnv.getElementsAnnotatedWith(EventMessageDocumentation::class.java) ?: emptySet()
         val newEventDocumentations: List<EventDocumentationEntry> = documented.map {
             val annotation = it.getAnnotation(EventMessageDocumentation::class.java)
             EventDocumentationEntry(
@@ -57,6 +61,15 @@ class EventAnnotationProcessor : AbstractProcessor() {
         }
 
         eventDocumentations.addAll(newEventDocumentations)
+        if (outputDir == null) {
+            outputDir = File(outputDir())
+            outputDir?.mkdirs()
+        }
+        if (roundEnv.processingOver()) {
+            eventDocumentations.joinToString("\n") { "* ${it.name}: ${it.description} [ ${it.topic} ]" }.let {
+                File(outputDir!!.absolutePath + "/events.md").writeText(it)
+            }
+        }
 
         return false
     }
