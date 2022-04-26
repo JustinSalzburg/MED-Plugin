@@ -4,6 +4,7 @@ import java.io.File
 import javax.annotation.processing.*
 import javax.lang.model.SourceVersion
 import javax.lang.model.element.Element
+import javax.lang.model.element.ExecutableElement
 import javax.lang.model.element.TypeElement
 import javax.tools.Diagnostic
 
@@ -51,6 +52,9 @@ class EventAnnotationProcessor : AbstractProcessor() {
 
         val documented = roundEnv.getElementsAnnotatedWith(EventMessageDocumentation::class.java) ?: emptySet()
         val newEventDocumentations: List<EventDocumentationEntry> = documented.map {
+            val executableElement = it as ExecutableElement
+            val declaredType = executableElement.parameters[0].asType()
+            println(declaredType)
             val annotation = it.getAnnotation(EventMessageDocumentation::class.java)
             EventDocumentationEntry(
                 functionName = fullClassName(it),
@@ -59,6 +63,7 @@ class EventAnnotationProcessor : AbstractProcessor() {
                 topic = annotation.topic
             )
         }
+
 
         eventDocumentations.addAll(newEventDocumentations)
         if (outputDir == null) {

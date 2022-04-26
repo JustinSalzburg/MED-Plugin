@@ -4,7 +4,7 @@ data class MessageString(val text: String, val from: String, val to: String)
 
 class Application {
 
-    @EventMessageDocumentation(name="Hello", description = "Test123", topic = "TTopic")
+    @EventMessageDocumentation(name="Hello", description = "Test123", topic = "")
     fun sendMessage(message: MessageString){
         println(message.text)
     }
