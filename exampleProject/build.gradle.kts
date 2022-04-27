@@ -11,6 +11,7 @@ repositories {
 dependencies {
 
     implementation("io.github.justinsalzburg.med-gradle-plugin:plugin:1.1.8")
+    implementation("org.jetbrains.kotlin:kotlin-reflect:1.6.21")
 }
 
 tasks.named("build") {
