@@ -2,7 +2,9 @@ package exampleProject
 
 import io.github.justinsalzburg.medgradleplugin.processor.EventMessageDocumentation
 
-data class MessageString(val text: String, val from: String, val to: String)
+data class MessageString(val text: String, val from: String, val to: ToMessage)
+
+data class ToMessage(val message: String, val to: String)
 
 class Application {
 
@@ -16,5 +18,5 @@ class Application {
 
 fun main(){
     val app = Application()
-    app.sendMessage(MessageString("Hello World", "Programmer", "Program"), "Hello World")
+    app.sendMessage(MessageString("Hello World", "Programmer", ToMessage("1234", "Programmer")), "Hello World")
 }

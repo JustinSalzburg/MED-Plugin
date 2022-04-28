@@ -4,6 +4,7 @@ import java.io.File
 import javax.annotation.processing.*
 import javax.lang.model.SourceVersion
 import javax.lang.model.element.Element
+import javax.lang.model.element.ElementKind
 import javax.lang.model.element.ExecutableElement
 import javax.lang.model.element.TypeElement
 import javax.tools.Diagnostic
@@ -14,13 +15,13 @@ annotation class EventMessageDocumentation(val name: String, val description: St
 data class EventDocumentationParamObject(
     val name: String,
     val type: String,
-    val properties: EventDocumentationParamObject?
+    val properties: List<EventDocumentationParamObject?>
 )
 
 data class EventDocumentationParam(
     val name: String,
     val type: String,
-    val properties: EventDocumentationParamObject?
+    val properties: List<EventDocumentationParamObject?>
 
 )
 
@@ -42,7 +43,7 @@ class EventAnnotationProcessor : AbstractProcessor() {
     }
 
     private var outputDir: File? = null
-    val eventDocumentations = mutableListOf<EventDocumentationEntry>()
+    private val eventDocumentations = mutableListOf<EventDocumentationEntry>()
 
     override fun getSupportedOptions() = setOf(EVENT_OUTPUT_DIR)
 
@@ -92,38 +93,43 @@ class EventAnnotationProcessor : AbstractProcessor() {
 
     private fun fullClassName(it: Element) = "${it.enclosingElement.simpleName}.${it.simpleName}"
 
+    private fun getTypeProperties(path: MutableList<out Element>, typeName: String, kind: ElementKind): List<Element>{
+        val typeFind = path.find { element -> element.toString() == typeName }
+        return if(typeFind !== null){
+            typeFind.enclosedElements.filter { it.kind == kind }
+        }else{
+            emptyList()
+        }
+    }
+
     private fun getParameter(document: Element): List<EventDocumentationParam> {
         val executableElement = document as ExecutableElement
-//        val declaredTypeNames = executableElement.parameters.map { it.asType().toString() }
         val path = executableElement.enclosingElement.enclosingElement.enclosedElements
+//        val declaredTypeNames = executableElement.parameters.map { it.asType().toString() }
 //        val declaredTypes = declaredTypeNames.map { types -> path.find { it.toString() == types } }
 //        val fields = declaredTypes.map {
 //            val props = it!!.enclosedElements.filter { it.kind == ElementKind.FIELD }
 //        }
 
-        return executableElement.parameters.map {
-            val name = it.simpleName.toString()
-            val typeName = it.asType().toString()
-            val type = path.find{it.toString() == typeName}
-//            println(type!!.enclosedElements.filter{it.kind == ElementKind.FIELD})
-            println(name)
-            println(type)
+        return executableElement.parameters.map { param ->
+            val name = param.simpleName.toString()
+            val typeName = param.asType().toString()
+            val type = getTypeProperties(path, typeName, ElementKind.FIELD)
             return@map EventDocumentationParam(
                 name = name,
                 type = typeName,
-                properties = getEventDocumentationParamObject(type)
+                properties = type.map { getEventDocumentationParamObject(it, path) }
 
             )
         }
-
     }
 
-    private fun getEventDocumentationParamObject(prop: Element?): EventDocumentationParamObject? {
+    private fun getEventDocumentationParamObject(prop: Element?, path: MutableList<out Element>): EventDocumentationParamObject? {
         return if (prop !== null) {
             EventDocumentationParamObject(
                 name = prop.simpleName.toString(),
                 type = prop.asType().toString(),
-                properties = null
+                properties = getTypeProperties(path, prop.asType().toString(), ElementKind.FIELD).map { getEventDocumentationParamObject(it, path) }
             )
         } else {
             null
@@ -153,20 +159,26 @@ class EventAnnotationProcessor : AbstractProcessor() {
     private fun getMdFromParameter(parameter: List<EventDocumentationParam>): String {
         return parameter.joinToString("\n") {
             """
-                |* ${it.name} type: ${it.type}
+                |* param: ${it.name} type: ${it.type}
                 |${getMdFromObject(it.properties)}
             """.trimMargin()
         }
     }
 
-    private fun getMdFromObject(properties: EventDocumentationParamObject?): String {
-        if (properties !== null) {
-            return """
-                |   * ${properties.name} type: ${properties.type}
-                |    ${getMdFromObject(properties.properties)}
-            """.trimMargin()
-        } else {
-            return ""
+    private fun getMdFromObject(properties: List<EventDocumentationParamObject?>?): String {
+        println(properties)
+        if (properties !== emptyList<EventDocumentationParamObject>() && properties !== null) {
+            return properties.joinToString ("\n") { prop ->
+                if (prop !== null) {
+                    """
+                        |   * property: ${prop.name} type: ${prop.type}
+                        |   ${getMdFromObject(prop.properties)}
+                    """.trimMargin()
+                }else{
+                    ""
+                }
+            }
         }
+        return ""
     }
 }
