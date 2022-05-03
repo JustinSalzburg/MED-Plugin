@@ -1,5 +1,6 @@
 package io.github.justinsalzburg.medgradleplugin.processor
 
+import io.github.justinsalzburg.medgradleplugin.MdWriter
 import java.io.File
 import javax.annotation.processing.*
 import javax.lang.model.SourceVersion
@@ -83,7 +84,7 @@ class EventAnnotationProcessor : AbstractProcessor() {
             outputDir?.mkdirs()
         }
         if (roundEnv.processingOver()) {
-            getMdString(eventDocumentations).let {
+            MdWriter(eventDocumentations).getMdString().let {
                 File(outputDir!!.absolutePath + "/events.md").writeText(it)
             }
         }
@@ -105,11 +106,6 @@ class EventAnnotationProcessor : AbstractProcessor() {
     private fun getParameter(document: Element): List<EventDocumentationParam> {
         val executableElement = document as ExecutableElement
         val path = executableElement.enclosingElement.enclosingElement.enclosedElements
-//        val declaredTypeNames = executableElement.parameters.map { it.asType().toString() }
-//        val declaredTypes = declaredTypeNames.map { types -> path.find { it.toString() == types } }
-//        val fields = declaredTypes.map {
-//            val props = it!!.enclosedElements.filter { it.kind == ElementKind.FIELD }
-//        }
 
         return executableElement.parameters.map { param ->
             val name = param.simpleName.toString()
@@ -137,48 +133,5 @@ class EventAnnotationProcessor : AbstractProcessor() {
 
     }
 
-    private fun getMdString(annotation: List<EventDocumentationEntry>): String {
-        return annotation.joinToString("\n") {
-            """#${it.name}
-                |##Description:
-                |${it.description}
-                |${
-                if (it.topic !== "") {
-                    "#Topic: ${it.topic}"
-                } else {
-                    ""
-                }
-            }
-                |##Parameter:
-                |${getMdFromParameter(it.parameter)}
-                
-            """.trimMargin()
-        }
-    }
 
-    private fun getMdFromParameter(parameter: List<EventDocumentationParam>): String {
-        return parameter.joinToString("\n") {
-            """
-                |* param: ${it.name} type: ${it.type}
-                |${getMdFromObject(it.properties)}
-            """.trimMargin()
-        }
-    }
-
-    private fun getMdFromObject(properties: List<EventDocumentationParamObject?>?): String {
-        println(properties)
-        if (properties !== emptyList<EventDocumentationParamObject>() && properties !== null) {
-            return properties.joinToString ("\n") { prop ->
-                if (prop !== null) {
-                    """
-                        |   * property: ${prop.name} type: ${prop.type}
-                        |   ${getMdFromObject(prop.properties)}
-                    """.trimMargin()
-                }else{
-                    ""
-                }
-            }
-        }
-        return ""
-    }
 }

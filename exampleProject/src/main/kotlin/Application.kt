@@ -4,7 +4,17 @@ import io.github.justinsalzburg.medgradleplugin.processor.EventMessageDocumentat
 
 data class MessageString(val text: String, val from: String, val to: ToMessage)
 
-data class ToMessage(val message: String, val to: String)
+data class ToMessage(val message: String, val to: TestMessage)
+
+class TestMessage(message: String, from: String){
+    private var message: String = ""
+    private var from: Int
+
+    init {
+        this.message = message
+        this.from = from.length
+    }
+}
 
 class Application {
 
@@ -14,9 +24,4 @@ class Application {
         println(message2)
     }
 
-}
-
-fun main(){
-    val app = Application()
-    app.sendMessage(MessageString("Hello World", "Programmer", ToMessage("1234", "Programmer")), "Hello World")
 }
