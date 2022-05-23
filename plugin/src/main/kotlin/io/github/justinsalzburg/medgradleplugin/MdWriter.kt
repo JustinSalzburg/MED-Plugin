@@ -1,40 +1,43 @@
 package io.github.justinsalzburg.medgradleplugin
 
 import io.github.justinsalzburg.medgradleplugin.processor.EventDocumentationEntry
-import io.github.justinsalzburg.medgradleplugin.processor.EventDocumentationParam
-import io.github.justinsalzburg.medgradleplugin.processor.EventDocumentationParamObject
+import io.github.justinsalzburg.medgradleplugin.processor.EventDocumentationProps
 
 class MdWriter(private val annotation: List<EventDocumentationEntry>) {
     fun getMdString(): String {
         return annotation.joinToString("\n") {
-            """#${it.name}
-                |##Description:
+            """###${it.name}
+                |***Beschreibung:***
+                |
                 |${it.description}
                 |${
                 if (it.topic !== "") {
-                    "#Topic: ${it.topic}"
+                    "####Topic: ${it.topic}"
                 } else {
                     ""
                 }
-            }
-                |##Parameter:
-                |${getMdFromParameter(it.parameter)}
+                }
+                |
+                |---
+                || Key | Datentyp | Beschreibung |
+                || --- | -------- | ------------ |
+                |${getMdFromProperties(it.properties)}
                 
             """.trimMargin()
         }
     }
 
-    private fun getMdFromParameter(parameter: List<EventDocumentationParam>): String {
-        return parameter.joinToString("\n") {
+    private fun getMdFromProperties(parameter: List<EventDocumentationProps>): String {
+        return parameter.joinToString("\n |") {
             """
-                |* param: ${it.name} type: ${it.type} ${getMdFromObject(it.properties, 1)}
-            """.trimMargin()
+                |${it.name} | ${it.type} | ${it.description} | ${if(it.properties !== emptyList<EventDocumentationProps>()){"\n" + getMdFromProperties(it.properties)}else{""}}
+            """.trimIndent()
         }
     }
 
-    private fun getMdFromObject(properties: List<EventDocumentationParamObject?>?, tab: Int): String {
+    private fun getMdFromObject(properties: List<EventDocumentationProps?>?, tab: Int): String {
         println(properties)
-        if (properties !== emptyList<EventDocumentationParamObject>() && properties !== null) {
+        if (properties !== emptyList<EventDocumentationProps>() && properties !== null) {
             return properties.joinToString ("\n") { prop ->
                 if (prop !== null) {
                     """
